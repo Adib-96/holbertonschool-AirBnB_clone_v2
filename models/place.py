@@ -34,23 +34,24 @@ class Place(BaseModel, Base):
         """returns the list of Review instances
         with place_id equals to the current Place.id"""
         from models import storage
-        l = []
+        _l = []
         res = storage.all("Review")
         for v in res.values():
             if v["place_id"] == self.id:
-                l.append(v)
-        return l
+                _l.append(v)
+        return _l
 
     @property
     def amenities(self):
-        """returns the list of Amenity instances based on the attribute amenity_ids"""
+        """returns the list of Amenity instances
+        based on the attribute amenity_ids"""
         from models import storage
-        l = []
+        _l = []
         res = storage.all("Amenity")
         for v in res.values():
             if v["amenity_ids"] == self.id:
-                l.append(v)
-        return l
+                _l.append(v)
+        return _l
 
     @amenities.setter
     def amenities(self, v):
