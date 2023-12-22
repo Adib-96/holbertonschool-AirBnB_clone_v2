@@ -18,8 +18,9 @@ class DBStorage:
         pwd = getenv("HBNB_MYSQL_PWD")
         host = getenv("HBNB_MYSQL_HOST")
         db = getenv("HBNB_MYSQL_DB")
-        link = "mysql+mysqldb://{}:{}@{}/{}".format(user, pwd, host, db)
-        self.__engine = create_engine(link, pool_pre_ping=True)
+        if user and pwd and host and db:
+            link = "mysql+mysqldb://{}:{}@{}/{}".format(user, pwd, host, db)
+            self.__engine = create_engine(link, pool_pre_ping=True)
         if getenv("HBNB_ENV") == "test":
             Base.metadata.drop_all(self.__engine)
 
@@ -36,14 +37,14 @@ class DBStorage:
         if cls is None:
             for i in classes:
                 res = self.__session.query(i).all()
-                for v in res.values():
-                    k = "{}.{}".format(i, v.id)
-                    setattr(dict, k, v)
+                for v in res:
+                    k = "{}.{}".format(i.__name__, v.id)
+                    dict[k] = v
         else:
             res = self.__session.query(cls).all()
-            for v in res.values():
-                k = "{}.{}".format(cls, v.id)
-                setattr(dict, k, v)
+            for v in res:
+                k = "{}.{}".format(cls.__name__, v.id)
+                dict[k] = v
         return dict
 
     def new(self, obj):
@@ -67,11 +68,13 @@ class DBStorage:
         from models.amenity import Amenity
         from models.place import Place
         from models.review import Review
-        make_s = sessionmaker(bind=self.__engine, expire_on_commit=False)
-        scop_session = scoped_session(make_s)
-        self.__session = scop_session()
-        Base.metadata.create_all(self.__engine)
-    
+        from sqlalchemy.engine.base import Engine
+        if isinstance(self.__engine, Engine):
+            make_s = sessionmaker(bind=self.__engine, expire_on_commit=False)
+            self.__session = scoped_session(make_s)
+            Base.metadata.create_all(self.__engine)
+
     def close(self):
-        """call remove() method on the private session attribute"""
+        """call remove() method on the private
+        session attribute (self.__session) orclose() on the class Session """
         self.__session.close()
