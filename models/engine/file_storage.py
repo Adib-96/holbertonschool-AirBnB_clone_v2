@@ -9,15 +9,15 @@ class FileStorage:
     __objects = {}
 
     def all(self, cls=None):
-        """ returns the list of objects of one type of class"""
+        '''returns the list of objects of one type of class'''
         if cls is None:
             return FileStorage.__objects
-        else:
-            dict = {}
-            for k, v in self.__objects.items():
-                if k.split(".")[0] == cls.__name__:
-                    dict[k] = v
-            return dict
+        filtered_objects = {
+            key: obj for key,
+            obj in FileStorage.__objects.items() if isinstance(
+                obj,
+                cls)}
+        return filtered_objects
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
@@ -57,14 +57,12 @@ class FileStorage:
             pass
 
     def delete(self, obj=None):
-        """delete obj from __objects if it’s inside
-        if obj is equal to None, the method should not do anything"""
-        if obj is not None:
-            key = "{}.{}".format(obj.__class__.__name__, obj.id)
-            if key in self.__objects.keys():
-                del (self.__objects[key])
+        '''delete obj from __objects if it’s inside'''
+        if obj is None:
+            return
+        key = f"{obj.__class__.__name__}.{obj.id}"
+        if key in self.__objects:
+            del self.__objects[key]
 
     def close(self):
-        """call reload() method for deserializing
-        the JSON file to objects"""
         self.reload()
